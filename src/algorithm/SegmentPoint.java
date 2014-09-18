@@ -9,6 +9,10 @@ public class SegmentPoint extends Point2D.Float implements Comparable<SegmentPoi
   private PolygonSegment anotherPolygonSegment;
   private SegmentPointType type;
   
+  public SegmentPoint(Point2D.Float point) {
+    super(point.x, point.y);
+  }
+  
   public SegmentPoint(Point2D.Float point, PolygonSegment polygonSegment, SegmentPointType type) {
     super(point.x, point.y);
     this.type = type;
@@ -29,7 +33,18 @@ public class SegmentPoint extends Point2D.Float implements Comparable<SegmentPoi
 
   @Override
   public int compareTo(SegmentPoint o) {
-    return Comparator.compare(this, o);
+    int cmp = Comparator.compare(this, o);
+    if (cmp == 0) {
+      if (type == o.getType()) {
+        return 0;
+      } else if (type == SegmentPointType.END){
+        return -1;
+      } else {
+        return 1;
+      }
+    } else {
+      return cmp;
+    }
   }
 
   @Override
@@ -50,6 +65,11 @@ public class SegmentPoint extends Point2D.Float implements Comparable<SegmentPoi
   }
 
   public void setType(SegmentPointType type) {
-    this.type = type;    
+    this.type = type;
+  }
+  
+  @Override
+  public String toString() {
+    return type + ", (" + x + ", " + y + ")";
   }
 }

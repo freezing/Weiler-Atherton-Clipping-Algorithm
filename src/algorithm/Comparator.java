@@ -3,7 +3,7 @@ package algorithm;
 import java.awt.geom.Point2D;
 
 public class Comparator {
-  private static double EPS = 1e-3;
+  private static double EPS = 1e-6;
   
   public static int compare(Point2D a, Point2D b, double EPS) {
     if (a.getX() < b.getX() - EPS) {

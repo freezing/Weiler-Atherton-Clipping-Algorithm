@@ -12,8 +12,8 @@ public class IntersectionFinder {
       Polygon clippingPolygon,
       SweepLine sweepLine) {
     // Get polygon segments
-    List<PolygonSegment> subjectPolygonSegments = subjectPolygon.toSegments();
-    List<PolygonSegment> clippingPolygonSegments = clippingPolygon.toSegments();
+    List<PolygonSegment> subjectPolygonSegments = subjectPolygon.toSegments(sweepLine);
+    List<PolygonSegment> clippingPolygonSegments = clippingPolygon.toSegments(sweepLine);
     
     // Get end points of each polygon segments (marked as start and end points based on the status
     // line)
@@ -37,11 +37,12 @@ public class IntersectionFinder {
     return new Pair<>(subjectPolygonSegments, clippingPolygonSegments);    
   }
 
-  private static List<SegmentPoint> createSegmentPoints(List<PolygonSegment> polygonSegments) {
-    List<SegmentPoint> polygonSgmentPoints = new ArrayList<>();
+  protected static List<SegmentPoint> createSegmentPoints(List<PolygonSegment> polygonSegments) {
+    List<SegmentPoint> polygonSegmentPoints = new ArrayList<>();
     for (PolygonSegment polygonSegment : polygonSegments) {
-      polygonSgmentPoints.addAll(polygonSegment.toSegmentPoints());
+      List<SegmentPoint> segmentPoints = polygonSegment.toSegmentPoints();
+      polygonSegmentPoints.addAll(segmentPoints);
     }
-    return polygonSgmentPoints;
+    return polygonSegmentPoints;
   }
 }
