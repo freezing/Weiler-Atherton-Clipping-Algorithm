@@ -1,8 +1,10 @@
 package algorithm.sweepline;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeSet;
 
+import states.SweepLineState;
 import algorithm.MathUtils;
 import algorithm.PolygonSegment;
 import algorithm.SegmentPoint;
@@ -21,11 +23,19 @@ public class SweepLine {
   
   private boolean isFinished;
   
+  private List<SweepLineState> states;
+  private SweepLineState currentState;
+  
   public SweepLine() {
+    states = new ArrayList<>();
     isFinished = false;
     statusLineX = Double.NEGATIVE_INFINITY;
   }
 
+  public List<SweepLineState> getStates() {
+    return states;
+  }
+  
   public void setPoints(List<SegmentPoint> segmentPoints) {
     this.segmentPoints = segmentPoints;
     this.intersectionPoints = new TreeSet<>();
@@ -51,8 +61,10 @@ public class SweepLine {
       return;
     }
     
-    // Set status line x coordinate
+    currentState = new SweepLineState();
+    currentState.setProcessedPoint(eventPoint);
     
+    // Set status line x coordinate    
     PolygonSegment polygonSegment = eventPoint.getPolygonSegment();
     if (eventPoint.getType() == SegmentPointType.START) {
       statusLineX = eventPoint.getX() + 5 * EPS;
@@ -103,6 +115,14 @@ public class SweepLine {
       checkAndAddIntersectionPoints(lowerPolygonSegment, eventPoint.getAnotherPolygonSegment());
       checkAndAddIntersectionPoints(eventPoint.getAnotherPolygonSegment(), higherPolygonSegment);
     }
+    
+    for (PolygonSegment segment : segments) {
+      currentState.addSegment(segment);
+    }
+    
+    currentState.addAllIntersectionPoints(allIntersectionPoints);
+    currentState.setStatusLineX(statusLineX);
+    states.add(currentState);
   }
 
   private SegmentPoint getNextPoint() {
@@ -159,11 +179,11 @@ public class SweepLine {
       // insert it
       intersectionPoints.add(intersectionPoint);
       allIntersectionPoints.add(intersectionPoint);
+      currentState.addIntersectionPoint(intersectionPoint);
     }
   }
 
   public Double getStatusLineX() {
     return statusLineX;
   }
-
 }
