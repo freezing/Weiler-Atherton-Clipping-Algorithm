@@ -10,24 +10,42 @@ public class PolygonSegment implements Comparable<PolygonSegment>{
   private static final Double EPS = 1e-3;
   private SweepLine sweepLine;
 
+  private boolean isSubject;
   private SegmentPoint startPoint;
   private SegmentPoint endPoint;
-  private List<Point2D> intersectionPoints;
+  private List<SegmentPoint> intersectionPoints;
+  private List<SegmentPointType> intersectionPointsTypes;
+  private PolygonSegment nextSegment;
   
   public PolygonSegment() {
     this.intersectionPoints = new ArrayList<>();
+    this.intersectionPointsTypes = new ArrayList<>();
   }
   
   public PolygonSegment(SegmentPoint startPoint, SegmentPoint endPoint) {
     this.startPoint = startPoint;
     this.endPoint = endPoint;
     this.intersectionPoints = new ArrayList<>();
+    this.intersectionPointsTypes = new ArrayList<>();
   }
   
-  public void addIntersectionPoint(Point2D point) {
+  public void addIntersectionPoint(SegmentPoint point) {
     if (!intersectionPoints.contains(point)) {
       intersectionPoints.add(point);
+      intersectionPointsTypes.add(SegmentPointType.INTERSECTION);
     }
+  }
+  
+  public void setIntersectionType(int idx, SegmentPointType type) {
+    intersectionPointsTypes.set(idx, type);
+  }
+  
+  public void setSubject(boolean isSubject) {
+    this.isSubject = isSubject;
+  }
+  
+  public boolean isSubject() {
+    return isSubject;
   }
   
   public void setSweepLine(SweepLine sweepLine) {
@@ -52,7 +70,7 @@ public class PolygonSegment implements Comparable<PolygonSegment>{
     endPoint.setPolygonSegments(this, null);
   }
   
-  public List<Point2D> getIntersectionPoints() {
+  public List<SegmentPoint> getIntersectionPoints() {
     return intersectionPoints;
   }
   
@@ -85,7 +103,7 @@ public class PolygonSegment implements Comparable<PolygonSegment>{
     segmentPoints.add(new SegmentPoint(startPoint, this, startPointType));
     segmentPoints.add(new SegmentPoint(endPoint, this, endPointType));
     return segmentPoints;
-  }
+  } 
 
   /**
    * 
@@ -165,6 +183,63 @@ public class PolygonSegment implements Comparable<PolygonSegment>{
       return this.compareTo(other) == 0;
     } else {
       return false;
+    }
+  }
+
+  /**
+   * Sort intersection points by distance from startPoint.
+   */
+  public void sortIntersectionPoints() {
+//    Collections.sort(intersectionPoints, new DistanceComparator(startPoint));
+    // TODO(freezing): For now it is sorted using selection sort, do it with QuickSort
+    // when figure out how to sort java collections with specified comparator
+    for (int i = 0; i < intersectionPoints.size(); i++) {
+      for (int j = i + 1; j < intersectionPoints.size(); j++) {
+        if (intersectionPoints.get(i).distance(startPoint) > intersectionPoints.get(j).distance(startPoint)) {
+          // swap i-th and j-th intersection point
+          SegmentPoint tmp = intersectionPoints.get(i);
+          intersectionPoints.set(i, intersectionPoints.get(j));
+          intersectionPoints.set(j, tmp);
+        }
+      }
+    }
+  }
+
+  public String intersectionPointsToString() {
+    String s = "";
+    for (Point2D point : intersectionPoints) {
+      s += "(" + point.getX() + ", " + point.getY() + ")";
+    }
+    return s;
+  }
+
+  public SegmentPointType getIntersectionPointType(int idx) {
+    return intersectionPointsTypes.get(idx);
+  }
+
+  public void setNextSegment(PolygonSegment polygonSegment) {
+    nextSegment = polygonSegment;
+  }
+  
+  public PolygonSegment getNextSegment() {
+    return nextSegment;
+  }
+
+  public SegmentPoint findNextPoint(SegmentPoint lastPoint) {
+    if (lastPoint.equals(endPoint)) {
+      return nextSegment.findNextPoint(lastPoint);
+    } else if (lastPoint.equals(startPoint)) {
+      if (intersectionPoints.size() > 0) {
+        return intersectionPoints.get(0);
+      } else {
+        return endPoint;
+      }
+    } else {
+      if (intersectionPoints.get(intersectionPoints.size() - 1).equals(lastPoint)) {
+        return endPoint;
+      } else {
+        return intersectionPoints.get(intersectionPoints.indexOf(lastPoint) + 1);
+      }
     }
   }
 }

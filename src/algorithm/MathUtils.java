@@ -6,6 +6,15 @@ import java.awt.geom.Point2D;
 public class MathUtils {
   private static final double EPS = 1e-3;
 
+  public static double vectorProduct(SegmentPoint A, SegmentPoint B,
+      SegmentPoint C) {
+    double x1 = B.x - A.x;
+    double y1 = B.y - A.y;
+    double x2 = C.x - A.x;
+    double y2 = C.y - A.y;
+    return vectorProduct(x1, y1, x2, y2);
+  }
+  
   public static int counterClockwiseComparison(SegmentPoint A, SegmentPoint B,
       SegmentPoint C) {
     double x1 = B.x - A.x;

@@ -8,6 +8,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.Point2D;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JPanel;
@@ -25,10 +26,9 @@ public class Framework extends JPanel implements MouseListener, MouseMotionListe
 
   private static final int LINE_STROKE = 2;
   
-  private static final Color DARK_GREEN = new Color(0, 153, 51);
-  
   private static final Color ENTERING_COLOR = Color.GREEN;
   private static final Color EXITING_COLOR = Color.RED;
+  private static final Color POLYGON_COLOR = Color.YELLOW.brighter().brighter().brighter();
   
   private static final Color SUBJECT_COLOR = new Color(255, 51, 0);
   private static final Color CLIPPING_COLOR = new Color(76, 0, 0);
@@ -44,6 +44,8 @@ public class Framework extends JPanel implements MouseListener, MouseMotionListe
 
   private Polygon subjectPolygon;
   private Polygon clippingPolygon;
+  
+  private WeilerAtherton weilerAtherton;
   
   private int currentState;
   private List<SweepLineState> sweepLineStates;
@@ -98,7 +100,7 @@ public class Framework extends JPanel implements MouseListener, MouseMotionListe
 
       // Draw SweepLineState
       drawSweepLineState(g2d, sweepLineStates.get(currentState));
-    } else if (currentState < weilerAthertonStates.size()){
+    } else if (currentState < weilerAthertonStates.size() + sweepLineStates.size()){
       // First draw both polygons in BLACK color
       drawPolygons(g2d, Color.BLACK);
 
@@ -124,21 +126,53 @@ public class Framework extends JPanel implements MouseListener, MouseMotionListe
   }
 
   private void drawWeilerAthertonState(Graphics2D g2d, WeilerAthertonState weilerAthertonState) {
-    // TODO(freezing): Draw Weiler-Atherton State
+    List<Point2D> enteringPoints = weilerAtherton.getEnteringPoints();
+    List<Point2D> exitingPoints = weilerAtherton.getExitingPoints();
+    
+    // 0. Draw all segments
+    drawPolygons(g2d, SUBJECT_COLOR, CLIPPING_COLOR);
+    
+    // 1. Draw all polygons
+    for (Polygon polygon : weilerAthertonState.getPolygons()) {
+      fillPolygon(g2d, polygon, POLYGON_COLOR);
+    }
+    
+    // 2. Draw all the segments that are currently processed (BLUE)
+    for (PolygonSegment segment : weilerAthertonState.getSegments()) {
+      Point2D pointA = segment.getStartPoint();
+      Point2D pointB = segment.getEndPoint();
+      drawSegment(g2d, pointA, pointB, Color.BLUE);
+    }
+    
+    // 3. Draw all intersection points (GRAY)
+    List<Point2D> intersectionPoints = new ArrayList<>();
+    intersectionPoints.addAll(enteringPoints);
+    intersectionPoints.addAll(exitingPoints);
+    g2d.setColor(Color.GRAY);
+    for (Point2D point : intersectionPoints) {
+      drawPoint(g2d, point);
+    }
+    
+    // 4. Draw all entering points
+    g2d.setColor(ENTERING_COLOR);
+    for (Point2D point : enteringPoints) {
+      drawPoint(g2d, point);
+    }
+    
+    // 5. Draw all exiting points
+    g2d.setColor(EXITING_COLOR);
+    for (Point2D point : exitingPoints) {
+      drawPoint(g2d, point);
+    }
   }
 
   private void drawSweepLineState(Graphics2D g2d, SweepLineState sweepLineState) {
     // 1. Draw current list of segments that are intersecting status line (BLUE)
-    g2d.setColor(Color.BLUE);
     for (PolygonSegment segment : sweepLineState.getCurrentSegments()) {
       Point2D pointA = segment.getStartPoint();
       Point2D pointB = segment.getEndPoint();
 
-      g2d.drawLine(
-          (int) Math.round(pointA.getX()),
-          (int) Math.round(pointA.getY()),
-          (int) Math.round(pointB.getX()),
-          (int) Math.round(pointB.getY()));
+      drawSegment(g2d, pointA, pointB, Color.BLUE);
     }
     
     // 2. Draw all intersection points so far
@@ -158,6 +192,15 @@ public class Framework extends JPanel implements MouseListener, MouseMotionListe
     System.out.println(statusLineX);
     g2d.setColor(STATUS_LINE_COLOR);
     g2d.drawLine(statusLineX, 0, statusLineX, getHeight());
+  }
+
+  private void drawSegment(Graphics2D g2d, Point2D pointA, Point2D pointB, Color color) {
+    g2d.setColor(color);
+    g2d.drawLine(
+        (int) Math.round(pointA.getX()),
+        (int) Math.round(pointA.getY()),
+        (int) Math.round(pointB.getX()),
+        (int) Math.round(pointB.getY()));
   }
 
   private void drawVertices(Graphics2D g2d, Polygon polygon, Color color) {
@@ -183,7 +226,7 @@ public class Framework extends JPanel implements MouseListener, MouseMotionListe
   
   private void fillPolygon(Graphics2D g2d, Polygon polygon, Color color) {
     g2d.setColor(color);
-    g2d.draw(polygon.asPath2D());
+    g2d.fill(polygon.asPath2D());
   }
 
   @Override
@@ -199,7 +242,7 @@ public class Framework extends JPanel implements MouseListener, MouseMotionListe
     if (currentState == -1 
         && subjectPolygon != null && subjectPolygon.isFinished() 
         && clippingPolygon != null && clippingPolygon.isFinished()) {
-      WeilerAtherton weilerAtherton = new WeilerAtherton(subjectPolygon, clippingPolygon);
+      weilerAtherton = new WeilerAtherton(subjectPolygon, clippingPolygon);
       System.out.println("Executing Weiler-Atherton algorithm...");
       weilerAtherton.execute();
       
@@ -209,6 +252,7 @@ public class Framework extends JPanel implements MouseListener, MouseMotionListe
       // Set SweepLine and WeilerAtherton States
       sweepLineStates = weilerAtherton.getSweepLine().getStates();
       weilerAthertonStates = weilerAtherton.getStates();
+      System.out.println("Wiler atherton size = " + weilerAtherton.getStates().size());
     }
     
     // We need both sweepLineStates and weilerAthertonStates to exist to use this action
@@ -270,13 +314,17 @@ public class Framework extends JPanel implements MouseListener, MouseMotionListe
       if (polygon.getVertices().isEmpty()) {
         // If this is the first point add it
         polygon.addVertex(currentPoint);
+        // Add next point that will be drawn (and replaced when clicked)
+        polygon.addVertex(currentPoint);
       } else {
-        // Otherwise, replace last point
-        polygon.replaceLastVertex(currentPoint);
+        // Otherwise, check if there is self-intersection
+        // and if not replace last point
+        if (polygon.canReplaceLastVertex(currentPoint)) {
+          polygon.replaceLastVertex(currentPoint);
+          // Add next point that will be drawn (and replaced when clicked)
+          polygon.addVertex(currentPoint);
+        }
       }
-      // Add next point that will be drawn (and replaced when clicked)
-      polygon.addVertex(currentPoint);
-      // TODO(freezing): Check self-intersection
     }
     repaint();
   }
@@ -319,6 +367,7 @@ public class Framework extends JPanel implements MouseListener, MouseMotionListe
   private Polygon getSubjectPolygon() {
     if (subjectPolygon == null || subjectPolygon.isFinished()) {
       subjectPolygon = new Polygon();
+      subjectPolygon.setSubject(true);
     }
     return subjectPolygon;
   }
@@ -326,6 +375,7 @@ public class Framework extends JPanel implements MouseListener, MouseMotionListe
   private Polygon getClippingPolygon() {
     if (clippingPolygon == null || clippingPolygon.isFinished()) {
       clippingPolygon = new Polygon();
+      clippingPolygon.setSubject(false);
     }
     return clippingPolygon;
   }

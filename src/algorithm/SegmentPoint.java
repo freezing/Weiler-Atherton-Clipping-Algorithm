@@ -8,17 +8,24 @@ public class SegmentPoint extends Point2D.Float implements Comparable<SegmentPoi
   private PolygonSegment polygonSegment;
   private PolygonSegment anotherPolygonSegment;
   private SegmentPointType type;
+  private boolean isProcessed;
   
   public SegmentPoint(Point2D.Float point) {
     super(point.x, point.y);
+    isProcessed = false;
   }
   
   public SegmentPoint(Point2D.Float point, PolygonSegment polygonSegment, SegmentPointType type) {
     super(point.x, point.y);
+    isProcessed = false;
     this.type = type;
     this.polygonSegment = polygonSegment;
   }
   
+  /**
+   * Returns segment belonging to subject polygon.
+   * @return
+   */
   public PolygonSegment getPolygonSegment() {
     return polygonSegment;
   }
@@ -29,6 +36,14 @@ public class SegmentPoint extends Point2D.Float implements Comparable<SegmentPoi
   
   public SegmentPointType getType() {
     return type;
+  }
+
+  public boolean isProcessed() {
+    return isProcessed;
+  }
+
+  public void setProcessed(boolean isProcessed) {
+    this.isProcessed = isProcessed;
   }
 
   @Override

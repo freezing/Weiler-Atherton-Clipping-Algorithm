@@ -167,7 +167,11 @@ public class SweepLine {
       return;
     }
 
-    intersectionPoint.setPolygonSegments(segmentA, segmentB);
+    if (segmentA.isSubject()) {
+      intersectionPoint.setPolygonSegments(segmentA, segmentB);
+    } else {
+      intersectionPoint.setPolygonSegments(segmentB, segmentA);
+    }
     intersectionPoint.setType(SegmentPointType.INTERSECTION);
     
     // Add intersection point to both segments
