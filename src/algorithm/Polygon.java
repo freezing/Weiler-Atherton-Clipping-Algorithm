@@ -219,7 +219,21 @@ public class Polygon {
    * @return
    */
   public boolean contains(Point2D.Float point) {
-    // TODO Auto-generated method stub
-    return false;
+    boolean oddIntersections = false;
+    List<PolygonSegment> segments = toSegments();
+    
+    for (PolygonSegment segment : segments) {
+        Point2D A = segment.getStartPoint();
+        Point2D B = segment.getEndPoint();
+        
+        if (A.getY() < point.getY() && B.getY() > point.getY()
+            || B.getY() < point.getY() && A.getY() > point.getY()) {
+          if (A.getX() < point.getX() && B.getX() > point.getX()
+              || B.getX() < point.getX() && A.getX() > point.getX()) {
+            oddIntersections = !oddIntersections;
+          }
+        } 
+    }
+    return oddIntersections;
   }
 }

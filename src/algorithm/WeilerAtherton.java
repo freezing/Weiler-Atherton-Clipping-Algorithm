@@ -28,6 +28,8 @@ public class WeilerAtherton {
     this.polygons = new ArrayList<>();
     this.subjectPolygon = Preconditions.checkNotNull(subjectPolygon);
     this.clippingPolygon = Preconditions.checkNotNull(clippingPolygon);
+    this.enteringPoints = new ArrayList<>();
+    this.exitingPoints = new ArrayList<>();
   }
   
   public List<Point2D> getEnteringPoints() {
@@ -57,6 +59,25 @@ public class WeilerAtherton {
     Pair<List<PolygonSegment>, List<PolygonSegment>> polygons =
         IntersectionFinder.findIntersectionPoints(subjectPolygon, clippingPolygon, sweepLine);
     
+    if (sweepLine.getAllIntersectionPoints().size() == 0) {
+      // No intersection points
+      
+      // Check if clipping polygon is inside the subject polygon
+      // or subject polygon is inside the clipping polygon.
+      // It is enough to check if one vertex is inside
+      if (subjectPolygon.contains(clippingPolygon.getVertex(0))) {
+        // Whole clipping polygon is the intersection
+        this.polygons.add(clippingPolygon);
+      } else if (clippingPolygon.contains(subjectPolygon.getVertex(0))) {
+        // Whole subject polygon is the intersection
+        this.polygons.add(subjectPolygon);
+      }
+      WeilerAthertonState state = new WeilerAthertonState();
+      state.setPolygons(this.polygons);
+      states.add(state);
+      return;
+    }
+    
     // For each segment line sort intersection points by their distance from start point
     System.out.println("Intersection points (subject polygon):");
     for (PolygonSegment segment : polygons.getFirst()) {
@@ -69,11 +90,10 @@ public class WeilerAtherton {
       segment.sortIntersectionPoints();
     }
     
-    markPointsAsEnteringAndExiting(polygons.getFirst(),
-        clippingPolygon.contains(subjectPolygon.getVertex(0)));
+    boolean containsFirst = clippingPolygon.contains(subjectPolygon.getVertex(0));
+    System.out.println("Contains first = " + containsFirst);
+    markPointsAsEnteringAndExiting(polygons.getFirst(), containsFirst);
     
-    this.enteringPoints = new ArrayList<>();
-    this.exitingPoints = new ArrayList<>();
     Set<SegmentPoint> enteringPoints = new HashSet<>();
     for (PolygonSegment segment : polygons.getFirst()) {
       for (int i = 0; i < segment.getIntersectionPoints().size(); i++) {

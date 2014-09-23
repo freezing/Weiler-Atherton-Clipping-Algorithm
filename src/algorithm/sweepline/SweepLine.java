@@ -32,6 +32,10 @@ public class SweepLine {
     statusLineX = Double.NEGATIVE_INFINITY;
   }
 
+  public TreeSet<SegmentPoint> getAllIntersectionPoints() {
+    return allIntersectionPoints;
+  }
+  
   public List<SweepLineState> getStates() {
     return states;
   }
