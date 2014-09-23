@@ -27,8 +27,8 @@ public class Framework extends JPanel implements MouseListener, MouseMotionListe
   private static final int LINE_STROKE = 2;
   
   private static final Color ENTERING_COLOR = Color.GREEN;
-  private static final Color EXITING_COLOR = Color.RED;
-  private static final Color POLYGON_COLOR = Color.YELLOW.brighter().brighter().brighter();
+  private static final Color EXITING_COLOR = Color.YELLOW;
+  private static final Color POLYGON_COLOR = new Color(199, 237, 208);
   
   private static final Color SUBJECT_COLOR = new Color(255, 51, 0);
   private static final Color CLIPPING_COLOR = new Color(76, 0, 0);
@@ -164,6 +164,10 @@ public class Framework extends JPanel implements MouseListener, MouseMotionListe
     for (Point2D point : exitingPoints) {
       drawPoint(g2d, point);
     }
+    
+    // 6. Draw string describing the algorithm state
+    g2d.setColor(Color.BLACK);
+    g2d.drawString("Weiler-Atherton Algorithm", 20, 20);
   }
 
   private void drawSweepLineState(Graphics2D g2d, SweepLineState sweepLineState) {
@@ -192,6 +196,10 @@ public class Framework extends JPanel implements MouseListener, MouseMotionListe
     System.out.println(statusLineX);
     g2d.setColor(STATUS_LINE_COLOR);
     g2d.drawLine(statusLineX, 0, statusLineX, getHeight());
+    
+    // 5. Draw text in the upper-left corner
+    g2d.setColor(Color.BLACK);
+    g2d.drawString("Sweep Line Algorithm", 20, 20);
   }
 
   private void drawSegment(Graphics2D g2d, Point2D pointA, Point2D pointB, Color color) {

@@ -76,6 +76,7 @@ public class MainFrame extends JFrame implements MouseMotionListener {
 
   public static void main(String[] args) {
     MainFrame frame = new MainFrame();
+    frame.setTitle("Weiler-Atherton Algorithm (using Sweep Line) - Nikola Stojiljkovic RN-10/11");
     frame.setVisible(true);
   }
 }
